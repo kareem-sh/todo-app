@@ -10,7 +10,7 @@ class TodoRepository implements TodoRepositoryInterface
 {
     public function all(int $userId): Collection
     {
-        return Todo::where('user_id', $userId)->get();
+        return Todo::where('user_id', $userId)->latest()->get();
     }
 
     public function find(int $id, int $userId): ?Todo
