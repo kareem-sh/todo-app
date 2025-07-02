@@ -1,107 +1,101 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api.js';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState({});
+    const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const validate = () => {
-        const newErrors = {};
-
-        if (!email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            newErrors.email = 'Invalid email format';
-        }
-
-        if (!password) {
-            newErrors.password = 'Password is required';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = e => {
+    const handleSubmit = async e => {
         e.preventDefault();
-        if (!validate()) return;
+        setMessage('');
+        setLoading(true);
 
-        console.log('Logging in with:', { email, password });
-        // Perform login logic here
+        try {
+            const res = await api.post('/login', { email, password });
+            const token = res.data.access_token;
+            localStorage.setItem('token', token);
+            setMessage('Login successful!');
+            navigate('/');
+        } catch (err) {
+            const msg =
+                err.response?.data?.message ||
+                err.response?.data?.errors?.email?.[0] ||
+                'Login failed';
+            setMessage(msg);
+        } finally {
+            setLoading(false);
+        }
     };
-
-    const inputClass = field =>
-        `mt-2 block w-full rounded-md px-3 py-1.5 text-base sm:text-sm outline-1 -outline-offset-1 ${
-            errors[field]
-                ? 'border border-red-500 text-red-900 placeholder:text-red-400 focus:outline-red-500'
-                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-gray-300 focus:outline-indigo-600'
-        }`;
 
     return (
-        <AuthLayout title="Sign in to your account">
-            <form className="space-y-6" onSubmit={handleSubmit}>
-                {/* Email */}
-                <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-900 dark:text-white">
-                        Email address
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={e => {
-                            setEmail(e.target.value);
-                            setErrors(prev => ({ ...prev, email: '' }));
-                        }}
-                        className={inputClass('email')}
-                    />
-                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                </div>
+        <div className="min-h-screen flex flex-col justify-center px-6 py-12 lg:px-8 bg-white dark:bg-gray-900">
+            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+                <img
+                    className="mx-auto h-10 w-auto"
+                    src="https://img.icons8.com/ios-filled/50/4a90e2/user.png"
+                    alt="User Icon"
+                />
+                <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    Sign in to your account
+                </h2>
+            </div>
 
-                {/* Password */}
-                <div>
-                    <div className="flex items-center justify-between">
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-white">
+            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
+                            Email address
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            required
+                            className="mt-1 w-full rounded-md bg-white dark:bg-gray-800 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 outline-gray-300 dark:outline-gray-700 focus:outline-2 focus:outline-indigo-600 sm:text-sm"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
                             Password
                         </label>
-                        <div className="text-sm">
-                            <Link to="/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                                Forgot password?
-                            </Link>
-                        </div>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
+                            className="mt-1 w-full rounded-md bg-white dark:bg-gray-800 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 outline-gray-300 dark:outline-gray-700 focus:outline-2 focus:outline-indigo-600 sm:text-sm"
+                        />
                     </div>
-                    <input
-                        id="password"
-                        type="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={e => {
-                            setPassword(e.target.value);
-                            setErrors(prev => ({ ...prev, password: '' }));
-                        }}
-                        className={inputClass('password')}
-                    />
-                    {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-                </div>
 
-                {/* Submit Button */}
-                <button
-                    type="submit"
-                    className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white border border-indigo-600 hover:bg-transparent hover:text-indigo-600 transition-colors duration-400  cursor-pointer"
-                >
-                    Sign in
-                </button>
-            </form>
+                    {message && <p className="text-sm text-center text-red-600">{message}</p>}
 
-            <p className="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                Not a member?
-                <Link to="/register" className="ml-1 font-semibold text-indigo-600 hover:text-indigo-500">
-                    Register
-                </Link>
-            </p>
-        </AuthLayout>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full flex justify-center rounded-md bg-indigo-600 text-white border border-indigo-600 px-3 py-1.5 text-sm font-semibold shadow-sm transition-colors duration-300 cursor-pointer
+              ${
+                            loading
+                                ? 'opacity-70 cursor-not-allowed'
+                                : 'hover:bg-white hover:dark:bg-gray-900 hover:text-indigo-600 hover:border-indigo-600'
+                        }
+            `}
+                    >
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <p className="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Don’t have an account?{' '}
+                    <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                        Register now
+                    </Link>
+                </p>
+            </div>
+        </div>
     );
 }
