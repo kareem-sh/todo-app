@@ -62,6 +62,7 @@ A clean, professional **Todo App** demonstrating good coding practices, modern t
 ✅ **React Router protected routes**  
 ✅ **Tailwind CSS (light/dark mode)**  
 ✅ **Button hover:** bg switches to section color, border + text stay indigo, cursor pointer
+✅ **Hide completed tasks:** button that hide completed tasks and it is only active when there is a completed task
 
 ---
 
