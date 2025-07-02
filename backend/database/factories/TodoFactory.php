@@ -13,9 +13,9 @@ class TodoFactory extends Factory
     public function definition()
     {
         return [
-            'user_id'      => User::factory(),           // associate with a newly created user
+            'user_id'      => User::factory(),
             'title'        => $this->faker->sentence(3),
-            'is_completed' => $this->faker->boolean(30),  // ~30% completed
+            'is_completed' => $this->faker->boolean(30),
         ];
     }
 }
