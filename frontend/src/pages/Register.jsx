@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api.js';
 
 export default function Register() {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,16 +15,25 @@ export default function Register() {
         e.preventDefault();
         setMessage('');
 
-        if (password !== confirmPassword) {
+        if (password.trim() !== confirmPassword.trim()) {
             setMessage("Passwords don't match");
             return;
         }
 
         setLoading(true);
         try {
-            await api.post('/register', { email, password });
-            setMessage('Registration successful! Please login.');
-            navigate('/login');
+            const res = await api.post('/register', {
+                name: name.trim(),
+                email: email.trim(),
+                password: password.trim(),
+                password_confirmation: confirmPassword.trim()
+            });
+
+            const token = res.data.access_token;
+            localStorage.setItem('token', token);
+            setMessage('Registration successful!');
+            navigate('/');
+
         } catch (err) {
             const msg =
                 err.response?.data?.message ||
@@ -52,10 +62,25 @@ export default function Register() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
+                            Name
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            required
+                            className="mt-1 w-full rounded-md bg-white dark:bg-gray-800 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 outline-gray-300 dark:outline-gray-700 focus:outline-2 focus:outline-indigo-600 sm:text-sm"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
                             Email address
                         </label>
                         <input
                             type="email"
+                            name="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
@@ -69,6 +94,7 @@ export default function Register() {
                         </label>
                         <input
                             type="password"
+                            name="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
@@ -82,6 +108,7 @@ export default function Register() {
                         </label>
                         <input
                             type="password"
+                            name="confirmPassword"
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)}
                             required
